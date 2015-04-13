@@ -2,6 +2,8 @@
 
 Starts a threadpool and runs functions in the pool
 
+NOTE - this is for demonstration only and is not threadsafe.  Be warned!
+
 ## Documentation
 
 All functions are under the namespace .threads
