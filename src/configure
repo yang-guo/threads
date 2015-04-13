@@ -1,0 +1,92 @@
+#!/bin/sh -e
+
+#
+# Parse command-line options
+#
+rm -f config.mk
+
+unset KXARCH KXVER CC CFLAGS
+for arg in "$@"; do
+	case "$arg" in
+               KXARCH=*)        KXARCH="${arg#*=}" ;;
+                KXVER=*)         KXVER="${arg#*=}" ;;
+                   CC=*)            CC="${arg#*=}" ;;
+                  CXX=*)           CXX="${arg#*=}" ;;
+               CFLAGS=*)        CFLAGS="${arg#*=}" ;;
+                FLAGS=*)         FLAGS="${arg#*=}" ;;
+                      *) echo "unknown configure option $1" >&2
+                         exit 1 ;;
+	esac
+done
+
+#
+# Checks and fill in defaults
+#
+
+echo "q operating system... "
+if [ -z "$KXARCH" ]; then
+	KXARCH=l32
+	#echo "\$KXARCH missing" >&2; exit 1
+fi
+echo "\$KXARCH=$KXARCH"
+
+echo "q version..."
+if [ -z "$KXVER" ]; then
+	KXVER=3
+	# echo "\$KXVER missing" >&2; exit 1
+fi
+echo "\$KXVER=$KXVER"
+
+echo "q library home..."
+if [ -z "$QHOME" ]; then
+	echo "No q library installation folder set...make sure qp base is correctly installed" >&2; exit 1
+
+fi
+echo "\$QHOME=$QHOME"
+
+echo "C Compiler..."
+if [ -z "$CC"]; then
+	CC=gcc
+fi
+echo "\$CC=$CC"
+
+echo "C++ Compiler..."
+if [ -z "$CXX"]; then
+	CXX=g++
+fi
+echo "\$CXX=$CXX"
+
+echo "CFLAGS..."
+if [ -z "$CFLAGS" ]; then
+	CFLAGS="-std=c99 -shared -fPIC -O3"
+else
+	CFLAGS="-std=c99 -shared -fPIC -O3 $CFLAGS"
+fi
+echo "\$CFLAGS=$CFLAGS"
+
+echo "FLAGS..."
+if [ -z "$FLAGS" ]; then
+	CARCH=-m${KXARCH#?}
+	case $CARCH in
+		-m32)		  MARCH="-march=i686" ;;
+		-m64)		MARCH="-march=native" ;;
+	esac
+	FLAGS="-DKXVER=$KXVER $CARCH $MARCH"
+fi
+echo "\$FLAGS=$FLAGS"
+
+# echo $CC -DXVER=$KXVER "$CC $CFLAGS $FLAGS"
+
+echo "writing configuration to config.mk"
+sed 's/\$/$$/g' >config.mk <<MAKEFILE
+KXARCH         := $KXARCH
+KXVER          := $KXVER
+QHOME          := $QHOME
+CC             := $CC
+CXX			   := g++
+CFLAGS         := $CFLAGS
+FLAGS          := $FLAGS
+INCLUDES	   := -I. -I..
+MAKEFILE
+
+echo "now run make clean && make"

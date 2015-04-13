@@ -1,0 +1,3 @@
+cd src
+sh configure KXARCH=l32 && make clean && make && make install
+sh configure KXARCH=l64 && make clean && make && make install
